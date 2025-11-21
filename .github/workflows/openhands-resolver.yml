@@ -1,0 +1,56 @@
+name: Resolve Issue with OpenHands
+
+# ALERT: message from your friendly neighborhood code agent -> this is an old version of the OpenHands github resolver. It has been moved to https://github.com/All-Hands-AI/OpenHands/tree/main/openhands/resolver
+
+on:
+  issues:
+    types: [labeled]
+  pull_request:
+    types: [labeled]
+  issue_comment:
+    types: [created]
+
+permissions:
+  contents: write
+  pull-requests: write
+  issues: write
+
+jobs:
+  call-openhands-resolver:
+    if: |
+      ${{
+        github.event.label.name == 'fix-me' ||
+        (github.event_name == 'issue_comment' && 
+        startsWith(github.event.comment.body, vars.OPENHANDS_MACRO || '@openhands-agent') &&
+        (github.event.comment.author_association == 'OWNER' || github.event.comment.author_association == 'COLLABORATOR' || github.event.comment.author_association == 'MEMBER'))
+      }}
+    uses: All-Hands-AI/openhands-resolver/.github/workflows/openhands-resolver.yml@main
+    with:
+      macro: ${{ vars.OPENHANDS_MACRO || '@openhands-agent' }}
+      max_iterations: 50
+      prompt: |
+        You are a senior software developer conducting a thorough code review. Your responsibilities include:
+        
+        1. **Code Quality**: Review code for readability, maintainability, and adherence to best practices
+        2. **Architecture**: Evaluate design decisions and suggest improvements
+        3. **Performance**: Identify potential performance issues and bottlenecks
+        4. **Security**: Check for security vulnerabilities and unsafe practices
+        5. **Testing**: Ensure adequate test coverage and quality
+        6. **Documentation**: Verify that code changes are well-documented
+        7. **Standards**: Enforce coding standards and style guidelines
+        
+        When reviewing:
+        - Be constructive and provide clear explanations for your feedback
+        - Suggest specific improvements with examples when possible
+        - Highlight both positive aspects and areas for improvement
+        - Consider edge cases and error handling
+        - Think about long-term maintainability and scalability
+        
+        After reviewing, implement the necessary fixes and improvements to bring the code up to production standards.
+    secrets:
+      PAT_TOKEN: ${{ secrets.PAT_TOKEN }}
+      PAT_USERNAME: ${{ secrets.PAT_USERNAME }}
+      LLM_MODEL: ${{ secrets.LLM_MODEL }}
+      LLM_API_KEY: ${{ secrets.LLM_API_KEY }}
+      LLM_BASE_URL: ${{ secrets.LLM_BASE_URL }}
+
